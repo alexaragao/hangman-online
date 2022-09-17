@@ -11,6 +11,7 @@
     ]
   },
   "devDependencies": {
+    "@hangman/server": "*",
     "jest": "^29.0.3",
     "ts-jest": "^29.0.1",
     "typescript": "^4.8.3"
