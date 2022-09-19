@@ -34,7 +34,7 @@ function configureIoServer(io: Server) {
       } catch (error: any) {
         console.log(`Socket$z${socket.id} retried to guess char ${data.char}.`);
       } finally {
-        socket.emit("room change", {
+        io.emit("room change", {
           charsGuessed: defaultRoom.charsGuessed,
           numErrors: defaultRoom.numErrors,
           phrase: defaultRoom.getMaskedPhrase(),
