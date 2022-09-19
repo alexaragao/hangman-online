@@ -28,14 +28,18 @@ function configureIoServer(io: Server) {
     });
 
     socket.on("char guess", (data: { char: string }) => {
-      const charGuess = defaultRoom.guessChar(data.char);
-      console.log(`Socket$${socket.id} guessed ${charGuess.char}.`);
-
-      socket.emit("room change", {
-        charsGuessed: defaultRoom.charsGuessed,
-        numErrors: defaultRoom.numErrors,
-        phrase: defaultRoom.getMaskedPhrase(),
-      });
+      try {
+        const charGuess = defaultRoom.guessChar(data.char);
+        console.log(`Socket$z${socket.id} guessed char ${charGuess.char}.`);
+      } catch (error: any) {
+        console.log(`Socket$z${socket.id} retried to guess char ${data.char}.`);
+      } finally {
+        socket.emit("room change", {
+          charsGuessed: defaultRoom.charsGuessed,
+          numErrors: defaultRoom.numErrors,
+          phrase: defaultRoom.getMaskedPhrase(),
+        });
+      }
     });
   });
 }
