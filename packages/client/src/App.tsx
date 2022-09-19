@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import "./App.css";
+import { Hangman } from "./components/Hangman";
+import { Keyboard } from "./components/Keyboard";
+import { PhraseReveal } from "./components/PhraseReveal";
 
 type RoomStatus = {
   charsGuessed: string[];
@@ -11,11 +14,12 @@ type RoomStatus = {
 const socket = io("http://localhost:5000");
 
 function App() {
-  const [roomStatus, setRoomsStatus] = useState<RoomStatus>({
-    charsGuessed: [],
-    numErrors: 0,
-    phrase: "",
-  });
+  const [{ charsGuessed, numErrors, phrase }, setRoomsStatus] =
+    useState<RoomStatus>({
+      charsGuessed: [],
+      numErrors: 0,
+      phrase: "",
+    });
 
   const handleKeyPress = useCallback((keyCode: string) => {
     if (/Key[A-Z]/.test(keyCode)) {
@@ -55,10 +59,11 @@ function App() {
 
   return (
     <div className="App">
-      <p>Hangman Online</p>
-      <p>Phrase: {roomStatus.phrase}</p>
-      <p>Errors: {roomStatus.numErrors}</p>
-      <p>CharsGuessed: {Array.from(roomStatus.charsGuessed).join(", ")}</p>
+      <Hangman badGuesses={numErrors} />
+
+      <PhraseReveal phrase={phrase} />
+
+      <Keyboard onKeyPress={handleKeyPress} disableKeys={charsGuessed} />
     </div>
   );
 }
