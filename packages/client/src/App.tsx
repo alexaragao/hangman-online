@@ -1,34 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useCallback, useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import "./App.css";
+import { Hangman } from "./components/Hangman";
+import { Keyboard } from "./components/Keyboard";
+import { PhraseReveal } from "./components/PhraseReveal";
+
+type RoomStatus = {
+  charsGuessed: string[];
+  numErrors: number;
+  phrase: string;
+};
+
+const socket = io("http://localhost:5000");
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [{ charsGuessed, numErrors, phrase }, setRoomsStatus] =
+    useState<RoomStatus>({
+      charsGuessed: [],
+      numErrors: 0,
+      phrase: "",
+    });
+
+  const handleKeyPress = useCallback((keyCode: string) => {
+    if (/Key[A-Z]/.test(keyCode)) {
+      const char = keyCode.at(-1)!;
+
+      setRoomsStatus((old) => {
+        if (!old.charsGuessed.includes(char)) {
+          socket.emit("char guess", { char });
+        }
+        return old;
+      });
+    }
+  }, []);
+
+  const keyPressListener = useCallback(
+    (event: KeyboardEvent) => {
+      const key = event.code;
+      handleKeyPress(key);
+    },
+    [handleKeyPress]
+  );
+
+  useEffect(() => {
+    socket.connect();
+
+    socket.on("room change", (data: RoomStatus) => {
+      setRoomsStatus(data);
+    });
+
+    window.addEventListener("keypress", keyPressListener);
+
+    return () => {
+      socket.disconnect();
+      window.removeEventListener("keypress", keyPressListener);
+    };
+  }, []);
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Hangman badGuesses={numErrors} />
+
+      <PhraseReveal phrase={phrase} />
+
+      <Keyboard onKeyPress={handleKeyPress} disableKeys={charsGuessed} />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
